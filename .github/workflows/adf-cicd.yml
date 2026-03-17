@@ -102,7 +102,7 @@ jobs:
     environment: production
 
     env:
-      ADF_ID: "prod-cc-adf"
+      ADF_ID: "prod-scc-adf"
 
     steps:
       - name: Download ARM template
