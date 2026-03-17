@@ -1,8 +1,8 @@
 {
-	"name": "csv",
+	"name": "Backup",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "LS_storage",
+			"referenceName": "storage_backup",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
@@ -10,9 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "aicg.csv",
-				"folderPath": "Output",
-				"container": "test"
+				"container": "bronzelayer"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
