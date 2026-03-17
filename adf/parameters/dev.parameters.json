@@ -4,9 +4,6 @@
 	"parameters": {
 		"factoryName": {
 			"value": "dev-scc-adf"
-		},
-		"LS_storage_connectionString": {
-			"value": ""
 		}
 	}
 }

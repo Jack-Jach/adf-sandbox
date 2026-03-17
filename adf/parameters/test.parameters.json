@@ -4,9 +4,6 @@
 	"parameters": {
 		"factoryName": {
 			"value": "test-acc-adf"
-		},
-		"LS_storage_connectionString": {
-			"value": ""
 		}
 	}
 }
