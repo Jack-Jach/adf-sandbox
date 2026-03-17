@@ -11,6 +11,9 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_storage'"
 		},
+		"LS_storage_properties_typeProperties_connectionString": {
+			"type": "string"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -40,6 +43,9 @@
 					},
 					"LS_storage_connectionString": {
 						"value": "[parameters('LS_storage_connectionString')]"
+					},
+					"LS_storage_properties_typeProperties_connectionString": {
+						"value": "[parameters('LS_storage_properties_typeProperties_connectionString')]"
 					}
 				}
 			},
