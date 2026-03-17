@@ -34,10 +34,17 @@ jobs:
         run: npm install
 
       - name: Validate
-        run: npm run build validate ${{github.workspace}}/adf /subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourceGroups/${{env.RESOURCE_GROUP}}/providers/Microsoft.DataFactory/factories/${{env.ADF_ID}}
+        run: |
+          npm run build validate \
+          ${{ github.workspace }}/adf \
+          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.DataFactory/factories/${{ env.ADF_ID }}
 
       - name: Generate ARM template
-        run: npm run build export ${{github.workspace}}/adf /subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourceGroups/${{env.RESOURCE_GROUP}}/providers/Microsoft.DataFactory/factories/${{env.ADF_ID}} "ExportedArmTemplate"
+        run: |
+          npm run build export \
+          ${{ github.workspace }}/adf \
+          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.DataFactory/factories/${{ env.ADF_ID }} \
+          "ExportedArmTemplate"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -68,19 +75,27 @@ jobs:
           name: ${{ env.BUILD_ARTIFACT }}
           path: arm-output/
 
+      - name: Debug parameters (optional)
+        run: cat ${{ env.PARAMETER_FILE }}
+
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
 
       - name: Stop ADF triggers
         uses: azure/powershell@v2
         with:
           inlineScript: |
-            $triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.ADF_ID }}"
+            $triggers = Get-AzDataFactoryV2Trigger `
+              -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
+              -DataFactoryName "${{ env.ADF_ID }}"
             $triggers | ForEach-Object {
-              Stop-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.ADF_ID }}" -Name $_.Name -Force
+              Stop-AzDataFactoryV2Trigger `
+                -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
+                -DataFactoryName "${{ env.ADF_ID }}" `
+                -Name $_.Name -Force
             }
           azPSVersion: latest
 
@@ -89,15 +104,20 @@ jobs:
         with:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: arm-output/ARMTemplateForFactory.json
-          parameters: "@${{ env.PARAMETER_FILE }}"
+          parameters: ${{ env.PARAMETER_FILE }}
 
       - name: Start ADF triggers
         uses: azure/powershell@v2
         with:
           inlineScript: |
-            $triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.ADF_ID }}"
+            $triggers = Get-AzDataFactoryV2Trigger `
+              -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
+              -DataFactoryName "${{ env.ADF_ID }}"
             $triggers | ForEach-Object {
-              Start-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.ADF_ID }}" -Name $_.Name -Force
+              Start-AzDataFactoryV2Trigger `
+                -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
+                -DataFactoryName "${{ env.ADF_ID }}" `
+                -Name $_.Name -Force
             }
           azPSVersion: latest
 
@@ -111,7 +131,7 @@ jobs:
     environment: production
 
     env:
-      ADF_ID: "prod-acc-adf"
+      ADF_ID: "prod-scc-adf"
       PARAMETER_FILE: "adf/parameters/prod.parameters.json"
 
     steps:
@@ -124,19 +144,27 @@ jobs:
           name: ${{ env.BUILD_ARTIFACT }}
           path: arm-output/
 
+      - name: Debug parameters (optional)
+        run: cat ${{ env.PARAMETER_FILE }}
+
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
           enable-AzPSSession: true
 
       - name: Stop ADF triggers
         uses: azure/powershell@v2
         with:
           inlineScript: |
-            $triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.ADF_ID }}"
+            $triggers = Get-AzDataFactoryV2Trigger `
+              -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
+              -DataFactoryName "${{ env.ADF_ID }}"
             $triggers | ForEach-Object {
-              Stop-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.ADF_ID }}" -Name $_.Name -Force
+              Stop-AzDataFactoryV2Trigger `
+                -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
+                -DataFactoryName "${{ env.ADF_ID }}" `
+                -Name $_.Name -Force
             }
           azPSVersion: latest
 
@@ -145,14 +173,19 @@ jobs:
         with:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: arm-output/ARMTemplateForFactory.json
-          parameters: "@${{ env.PARAMETER_FILE }}"
+          parameters: ${{ env.PARAMETER_FILE }}
 
       - name: Start ADF triggers
         uses: azure/powershell@v2
         with:
           inlineScript: |
-            $triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.ADF_ID }}"
+            $triggers = Get-AzDataFactoryV2Trigger `
+              -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
+              -DataFactoryName "${{ env.ADF_ID }}"
             $triggers | ForEach-Object {
-              Start-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.ADF_ID }}" -Name $_.Name -Force
+              Start-AzDataFactoryV2Trigger `
+                -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
+                -DataFactoryName "${{ env.ADF_ID }}" `
+                -Name $_.Name -Force
             }
           azPSVersion: latest
