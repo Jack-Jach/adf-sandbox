@@ -3,16 +3,10 @@
 	"contentVersion": "1.0.0.0",
 	"parameters": {
 		"factoryName": {
-			"value": "scc-adf-dev"
+			"value": "dev-scc-adf"
 		},
-		"LS_Databricks_properties_typeProperties_domain": {
-			"value": "https://adb-7405610566745110.10.azuredatabricks.net"
-		},
-		"LS_Databricks_properties_typeProperties_existingClusterId": {
-			"value": "0311-030442-4y5u6hkl"
-		},
-		"adf_pipeline_properties_activities_0_typeProperties_jobId": {
-			"value": "270697588091027"
+		"LS_storage_connectionString": {
+			"value": ""
 		}
 	}
 }
