@@ -85,7 +85,7 @@ jobs:
           azPSVersion: latest
 
       - name: Deploy to ${{ github.ref_name }} ADF
-        uses: azure/arm-deploy@v2
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: arm-output/ARMTemplateForFactory.json
@@ -141,7 +141,7 @@ jobs:
           azPSVersion: latest
 
       - name: Deploy to prod ADF
-        uses: azure/arm-deploy@v2
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: arm-output/ARMTemplateForFactory.json
