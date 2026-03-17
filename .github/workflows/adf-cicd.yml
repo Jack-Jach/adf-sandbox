@@ -13,6 +13,10 @@ env:
   # Use your Dev ADF for the Build/Export process
   DEV_ADF_NAME: "dev-scc-adf" 
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   # ──────────────────────────────────────
   # CI - Validate & Build
@@ -34,6 +38,14 @@ jobs:
             echo '{"dependencies": {"@microsoft/azure-data-factory-utilities": "^1.0.0"}}' > package.json
           fi
           npm install
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
 
       - name: Validate & Export ARM Template
         run: |
