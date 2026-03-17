@@ -1,22 +1,10 @@
 {
     "Microsoft.DataFactory/factories/linkedServices": {
-        "AzureDatabricks": {
+        "AzureBlobStorage": {
             "properties": {
                 "typeProperties": {
-                    "domain": "=",
-                    "existingClusterId": "="
+                    "connectionString": "="
                 }
-            }
-        }
-    },
-    "Microsoft.DataFactory/factories/pipelines": {
-        "*": {
-            "properties": {
-                "activities": [{
-                    "typeProperties": {
-                        "jobId": "="
-                    }
-                }]
             }
         }
     }
