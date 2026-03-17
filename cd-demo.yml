@@ -1,0 +1,69 @@
+# deploy pipeline: adf-workshop-cd
+
+trigger: none
+
+resources:
+  pipelines:
+  - pipeline: 'ArmBuilds'
+    source: 'adf-workshop-ci' # Name of the build pipeline
+    trigger:
+      branches:
+        include:
+        - main
+
+parameters:
+- name: azureServiceConnection
+  type: string
+  default: 'AZURE_SC' # Replace this with your Azure Service Connection
+
+variables:
+  subscriptionId: 'AZURE_SUBSCRIPTION_ID' # Replace this with your Azure Subscriptioin
+  buildArtifactPath: '$(Pipeline.Workspace)/ArmBuilds/ADF_ARM_Templates'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: DeployDev
+  variables:
+    - group: 'adf-workshop-dev'
+  jobs:
+  - deployment: DeploymentJob
+    environment: adf-workshop-dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+              - task: AzureCLI@2
+                displayName: "Deploy ARM Template files"
+                inputs:
+                  azureSubscription: '${{ parameters.azureServiceConnection }}'
+                  scriptType: 'bash'
+                  scriptLocation: 'inlineScript'
+                  inlineScript: |
+                    az deployment group create \
+                      --resource-group rg-adfworkshop-dev \
+                      --template-file $(buildArtifactPath)/ARMTemplateForFactory.json \
+                      --parameters factoryName=$(dfName) LS_KV_properties_typeProperties_baseUrl=https://$(kvName).vault.azure.net/ default_properties_env_value=dev
+
+- stage: DeployUat
+  variables:
+    - group: 'adf-workshop-uat'
+  jobs:
+  - deployment: DeploymentJob
+    environment: adf-workshop-uat
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+              - task: AzureCLI@2
+                displayName: "Deploy ARM Template files"
+                inputs:
+                  azureSubscription: '${{ parameters.azureServiceConnection }}'
+                  scriptType: 'bash'
+                  scriptLocation: 'inlineScript'
+                  inlineScript: |
+                    az deployment group create \
+                      --resource-group rg-adfworkshop-uat \
+                      --template-file $(buildArtifactPath)/ARMTemplateForFactory.json \
+                      --parameters factoryName=$(dfName) LS_KV_properties_typeProperties_baseUrl=https://$(kvName).vault.azure.net/ default_properties_env_value=uat

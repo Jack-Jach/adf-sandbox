@@ -1,0 +1,17 @@
+{
+	"name": "scc-adf-dev",
+	"properties": {
+		"globalParameters": {
+			"environment": {
+				"type": "string",
+				"value": "dev"
+			}
+		}
+	},
+	"location": "australiaeast",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "16f0a577-fd0f-4a05-8016-f25b88bca7b5",
+		"tenantId": "3c3cb7bb-3b39-461c-a638-72ab2edec2c9"
+	}
+}

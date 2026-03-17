@@ -1,0 +1,23 @@
+{
+    "Microsoft.DataFactory/factories/linkedServices": {
+        "AzureDatabricks": {
+            "properties": {
+                "typeProperties": {
+                    "domain": "=",
+                    "existingClusterId": "="
+                }
+            }
+        }
+    },
+    "Microsoft.DataFactory/factories/pipelines": {
+        "*": {
+            "properties": {
+                "activities": [{
+                    "typeProperties": {
+                        "jobId": "="
+                    }
+                }]
+            }
+        }
+    }
+}
