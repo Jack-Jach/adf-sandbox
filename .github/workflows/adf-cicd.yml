@@ -8,7 +8,7 @@ on:
       - main
 
 env:
-  RESOURCE_GROUP: "DatabricksCICD-test"
+  RESOURCE_GROUP: "Sandbox"
   BUILD_ARTIFACT: "ADF_ARM_Templates"
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ADF_ID: ${{ (github.ref_name == 'main' && 'scc-adf-prod') || (github.ref_name == 'test' && 'scc-adf-test') || 'scc-adf-dev' }}
+      ADF_ID: ${{ (github.ref_name == 'main' && 'prod-scc-adf') || (github.ref_name == 'test' && 'test-acc-adf') || 'dev-scc-adf' }}
 
     steps:
       - name: Checkout code
@@ -48,13 +48,13 @@ jobs:
   # ──────────────────────────────────────
   # CD - Deploy dev/test
   # ──────────────────────────────────────
-  deploy-nonprod:
+  deploy:
     if: ${{ github.ref_name == 'dev' || github.ref_name == 'test' }}
     needs: validate-and-build
     runs-on: ubuntu-latest
 
     env:
-      ADF_ID: ${{ (github.ref_name == 'test' && 'scc-adf-test') || 'scc-adf-dev' }}
+      ADF_ID: ${{ (github.ref_name == 'test' && 'test-acc-adf') || 'dev-acc-adf' }}
       PARAMETER_FILE: ${{ (github.ref_name == 'test' && 'adf/parameters/test.parameters.json') || 'adf/parameters/dev.parameters.json' }}
 
     steps:
@@ -109,7 +109,7 @@ jobs:
     environment: production
 
     env:
-      ADF_ID: "scc-adf-prod"
+      ADF_ID: "prod-acc-adf"
       PARAMETER_FILE: "adf/parameters/prod.parameters.json"
 
     steps:
