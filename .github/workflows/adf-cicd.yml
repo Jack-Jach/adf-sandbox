@@ -89,7 +89,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: arm-output/ARMTemplateForFactory.json
-          parameters: ${{ env.PARAMETER_FILE }}
+          parameters: "@${{ env.PARAMETER_FILE }}"
 
       - name: Start ADF triggers
         uses: azure/powershell@v2
@@ -145,7 +145,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: arm-output/ARMTemplateForFactory.json
-          parameters: ${{ env.PARAMETER_FILE }}
+          parameters: "@${{ env.PARAMETER_FILE }}"
 
       - name: Start ADF triggers
         uses: azure/powershell@v2
