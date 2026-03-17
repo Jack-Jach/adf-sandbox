@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ADF_ID: ${{ (github.ref_name == 'test' && 'test-acc-adf') || 'dev-acc-adf' }}
+      ADF_ID: ${{ (github.ref_name == 'test' && 'test-acc-adf') || 'dev-scc-adf' }}
       PARAMETER_FILE: ${{ (github.ref_name == 'test' && 'adf/parameters/test.parameters.json') || 'adf/parameters/dev.parameters.json' }}
 
     steps:
