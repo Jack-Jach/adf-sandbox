@@ -10,6 +10,8 @@ on:
 env:
   RESOURCE_GROUP: "Sandbox"
   BUILD_ARTIFACT: "ADF_ARM_Templates"
+  # Use your Dev ADF for the Build/Export process
+  DEV_ADF_NAME: "dev-scc-adf" 
 
 jobs:
   # ──────────────────────────────────────
@@ -17,10 +19,6 @@ jobs:
   # ──────────────────────────────────────
   validate-and-build:
     runs-on: ubuntu-latest
-
-    env:
-      ADF_ID: ${{ (github.ref_name == 'main' && 'prod-scc-adf') || (github.ref_name == 'test' && 'test-acc-adf') || 'dev-scc-adf' }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,22 +27,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Install ADF utilities
-        run: npm install
-
-      - name: Validate
         run: |
-          npm run build validate \
-          ${{ github.workspace }}/adf \
-          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.DataFactory/factories/${{ env.ADF_ID }}
+          if [ ! -f package.json ]; then
+            echo '{"dependencies": {"@microsoft/azure-data-factory-utilities": "^1.0.0"}}' > package.json
+          fi
+          npm install
 
-      - name: Generate ARM template
+      - name: Validate & Export ARM Template
         run: |
-          npm run build export \
-          ${{ github.workspace }}/adf \
-          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.DataFactory/factories/${{ env.ADF_ID }} \
-          "ExportedArmTemplate"
+          # 1. Validate
+          node node_modules/@microsoft/azure-data-factory-utilities/lib/index validate \
+            ${{ github.workspace }}/adf \
+            /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.DataFactory/factories/${{ env.DEV_ADF_NAME }}
+          
+          # 2. Export
+          node node_modules/@microsoft/azure-data-factory-utilities/lib/index export \
+            ${{ github.workspace }}/adf \
+            /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.DataFactory/factories/${{ env.DEV_ADF_NAME }} \
+            "ExportedArmTemplate"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -53,30 +56,26 @@ jobs:
           path: ExportedArmTemplate/
 
   # ──────────────────────────────────────
-  # CD - Deploy dev/test
+  # CD - Deploy (Dev, Test, or Prod)
   # ──────────────────────────────────────
   deploy:
-    name: Deploy (${{ github.ref_name }})
-    if: ${{ github.ref_name == 'dev' || github.ref_name == 'test' }}
     needs: validate-and-build
     runs-on: ubuntu-latest
+    
+    # Maps branch to GitHub Environment (allows for manual approval on 'production')
+    environment:
+      name: ${{ (github.ref_name == 'main' && 'production') || (github.ref_name == 'test' && 'test') || 'development' }}
 
     env:
-      ADF_ID: ${{ (github.ref_name == 'test' && 'test-acc-adf') || 'dev-scc-adf' }}
-      PARAMETER_FILE: ${{ (github.ref_name == 'test' && 'adf/parameters/test.parameters.json') || 'adf/parameters/dev.parameters.json' }}
+      # Map the correct ADF Name based on the branch
+      TARGET_ADF_NAME: ${{ (github.ref_name == 'main' && 'prod-scc-adf') || (github.ref_name == 'test' && 'test-acc-adf') || 'dev-scc-adf' }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Download ARM template
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.BUILD_ARTIFACT }}
           path: arm-output/
-
-      - name: Debug parameters (optional)
-        run: cat ${{ env.PARAMETER_FILE }}
 
       - name: Azure Login
         uses: azure/login@v2
@@ -88,104 +87,35 @@ jobs:
         uses: azure/powershell@v2
         with:
           inlineScript: |
-            $triggers = Get-AzDataFactoryV2Trigger `
-              -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
-              -DataFactoryName "${{ env.ADF_ID }}"
-            $triggers | ForEach-Object {
-              Stop-AzDataFactoryV2Trigger `
-                -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
-                -DataFactoryName "${{ env.ADF_ID }}" `
-                -Name $_.Name -Force
+            $triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.TARGET_ADF_NAME }}" -ErrorAction SilentlyContinue
+            if ($triggers) {
+                $triggers | ForEach-Object {
+                    Stop-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.TARGET_ADF_NAME }}" -Name $_.Name -Force
+                }
             }
           azPSVersion: latest
 
-      - name: Deploy to ${{ github.ref_name }} ADF
+      - name: Deploy ARM Template
         uses: azure/arm-deploy@v2
         with:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          # Use the template generated by the Build job
           template: arm-output/ARMTemplateForFactory.json
-          parameters: ${{ env.PARAMETER_FILE }}
+          # Use the parameter file generated by the Build job
+          parameters: arm-output/ARMTemplateParametersForFactory.json
+          # OVERRIDE the Factory Name to match the current environment
+          overrideParameters: >
+            factoryName=${{ env.TARGET_ADF_NAME }}
+          failOnStdErr: false
 
       - name: Start ADF triggers
         uses: azure/powershell@v2
         with:
           inlineScript: |
-            $triggers = Get-AzDataFactoryV2Trigger `
-              -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
-              -DataFactoryName "${{ env.ADF_ID }}"
-            $triggers | ForEach-Object {
-              Start-AzDataFactoryV2Trigger `
-                -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
-                -DataFactoryName "${{ env.ADF_ID }}" `
-                -Name $_.Name -Force
-            }
-          azPSVersion: latest
-
-  # ──────────────────────────────────────
-  # CD - Deploy prod (with approval)
-  # ──────────────────────────────────────
-  deploy-prod:
-    if: ${{ github.ref_name == 'main' }}
-    needs: validate-and-build
-    runs-on: ubuntu-latest
-    environment: production
-
-    env:
-      ADF_ID: "prod-scc-adf"
-      PARAMETER_FILE: "adf/parameters/prod.parameters.json"
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download ARM template
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.BUILD_ARTIFACT }}
-          path: arm-output/
-
-      - name: Debug parameters (optional)
-        run: cat ${{ env.PARAMETER_FILE }}
-
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          enable-AzPSSession: true
-
-      - name: Stop ADF triggers
-        uses: azure/powershell@v2
-        with:
-          inlineScript: |
-            $triggers = Get-AzDataFactoryV2Trigger `
-              -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
-              -DataFactoryName "${{ env.ADF_ID }}"
-            $triggers | ForEach-Object {
-              Stop-AzDataFactoryV2Trigger `
-                -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
-                -DataFactoryName "${{ env.ADF_ID }}" `
-                -Name $_.Name -Force
-            }
-          azPSVersion: latest
-
-      - name: Deploy to prod ADF
-        uses: azure/arm-deploy@v2
-        with:
-          resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: arm-output/ARMTemplateForFactory.json
-          parameters: ${{ env.PARAMETER_FILE }}
-
-      - name: Start ADF triggers
-        uses: azure/powershell@v2
-        with:
-          inlineScript: |
-            $triggers = Get-AzDataFactoryV2Trigger `
-              -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
-              -DataFactoryName "${{ env.ADF_ID }}"
-            $triggers | ForEach-Object {
-              Start-AzDataFactoryV2Trigger `
-                -ResourceGroupName "${{ env.RESOURCE_GROUP }}" `
-                -DataFactoryName "${{ env.ADF_ID }}" `
-                -Name $_.Name -Force
+            $triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.TARGET_ADF_NAME }}" -ErrorAction SilentlyContinue
+            if ($triggers) {
+                $triggers | ForEach-Object {
+                    Start-AzDataFactoryV2Trigger -ResourceGroupName "${{ env.RESOURCE_GROUP }}" -DataFactoryName "${{ env.TARGET_ADF_NAME }}" -Name $_.Name -Force
+                }
             }
           azPSVersion: latest
