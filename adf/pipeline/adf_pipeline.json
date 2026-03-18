@@ -55,7 +55,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "csv2",
+						"referenceName": "Output",
 						"type": "DatasetReference"
 					}
 				]
