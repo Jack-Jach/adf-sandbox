@@ -11,7 +11,7 @@
 			"location": {
 				"type": "AzureBlobStorageLocation",
 				"fileName": "aicg.csv",
-				"folderPath": "Output",
+				"folderPath": "input",
 				"container": "test"
 			},
 			"columnDelimiter": ",",
