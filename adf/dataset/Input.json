@@ -1,5 +1,5 @@
 {
-	"name": "csv",
+	"name": "Input",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_storage",
