@@ -4,6 +4,9 @@
 	"parameters": {
 		"factoryName": {
 			"value": "prod-acc-adf"
+		},
+		"dev-scc-adf_properties_globalParameters_environment_value": {
+			"value": "prod"
 		}
 	}
 }
