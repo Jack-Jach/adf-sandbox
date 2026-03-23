@@ -67,6 +67,7 @@ jobs:
 
     env:
       ADF_ID: ${{ (github.ref_name == 'test' && 'test-scc-adf') || 'dev-scc-adf' }}
+      STORAGE_CONN: ${{ (github.ref_name == 'test' && secrets.STORAGE_CONNECTION_STRING_TEST) || secrets.STORAGE_CONNECTION_STRING_DEV }}
 
     steps:
       - name: Download ARM template
@@ -90,7 +91,10 @@ jobs:
           dataFactoryName: ${{ env.ADF_ID }}
           armTemplateFile: arm-output/ARMTemplateForFactory.json
           armTemplateParametersFile: arm-output/ARMTemplateParametersForFactory.json
-          additionalParameters: "factoryName=${{ env.ADF_ID }}"
+          additionalParameters: >-
+            factoryName=${{ env.ADF_ID }}
+            LS_storage_properties_typeProperties_connectionString=${{ env.STORAGE_CONN }}
+
 
   # ──────────────────────────────────────
   # CD - Deploy prod (with approval)
@@ -126,4 +130,6 @@ jobs:
           dataFactoryName: ${{ env.ADF_ID }}
           armTemplateFile: arm-output/ARMTemplateForFactory.json
           armTemplateParametersFile: arm-output/ARMTemplateParametersForFactory.json
-          additionalParameters: "factoryName=${{ env.ADF_ID }}"
+          additionalParameters: >-
+            factoryName=${{ env.ADF_ID }}
+            LS_storage_properties_typeProperties_connectionString=${{ secrets.STORAGE_CONNECTION_STRING_PROD }}

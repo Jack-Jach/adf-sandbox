@@ -1,0 +1,32 @@
+{
+	"name": "TryConnectStorage2",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ConnectStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "output",
+				"container": "test"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "company_name",
+				"type": "String"
+			},
+			{
+				"name": "country_or_region",
+				"type": "String"
+			}
+		]
+	}
+}
