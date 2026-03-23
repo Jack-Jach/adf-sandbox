@@ -1,0 +1,24 @@
+{
+	"name": "TryConnectStorage",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ConnectStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "aicg.csv",
+				"folderPath": "input",
+				"container": "test"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
