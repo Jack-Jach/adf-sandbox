@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "If Condition1",
+				"name": "SeparateEnvironment",
 				"type": "IfCondition",
 				"dependsOn": [],
 				"userProperties": [],
@@ -71,7 +71,7 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "csv",
+									"referenceName": "Input",
 									"type": "DatasetReference"
 								}
 							],
