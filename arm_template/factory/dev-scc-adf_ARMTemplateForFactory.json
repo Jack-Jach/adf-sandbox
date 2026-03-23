@@ -1,0 +1,36 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "dev-scc-adf"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('factoryName')]",
+            "type": "Microsoft.DataFactory/factories",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "globalParameters": {
+                    "environment": {
+                        "type": "string",
+                        "value": "dev"
+                    }
+                }
+            },
+            "dependsOn": [],
+            "location": "australiaeast",
+            "identity": {
+                "type": "SystemAssigned",
+                "principalId": "c2858b05-d7b8-4c28-ade0-84eb98e52fc3",
+                "tenantId": "fa0c9f03-6877-4202-b208-d797cf57925c"
+            }
+        }
+    ]
+}
