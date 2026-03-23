@@ -26,7 +26,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "If Condition1",
+						"name": "SeparateEnvironment",
 						"type": "IfCondition",
 						"dependsOn": [],
 						"userProperties": [],
@@ -94,7 +94,7 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "csv",
+											"referenceName": "Input",
 											"type": "DatasetReference",
 											"parameters": {}
 										}
@@ -117,40 +117,12 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/csv')]",
+				"[concat(variables('factoryId'), '/datasets/Input')]",
 				"[concat(variables('factoryId'), '/datasets/Output')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Output')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_storage",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"folderPath": "output",
-						"container": "test"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_storage')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/csv')]",
+			"name": "[concat(parameters('factoryName'), '/Input')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -179,7 +151,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/csv2')]",
+			"name": "[concat(parameters('factoryName'), '/Output')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -192,7 +164,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"folderPath": "input",
+						"folderPath": "output",
 						"container": "test"
 					},
 					"columnDelimiter": ",",
