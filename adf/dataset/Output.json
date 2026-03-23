@@ -1,5 +1,5 @@
 {
-	"name": "csv",
+	"name": "Output",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "LS_storage",
@@ -10,8 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "aicg.csv",
-				"folderPath": "input",
+				"folderPath": "output",
 				"container": "test"
 			},
 			"columnDelimiter": ",",
