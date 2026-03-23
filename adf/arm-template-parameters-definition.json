@@ -1,4 +1,15 @@
 {
+    "Microsoft.DataFactory/factories": {
+        "*": {
+            "properties": {
+                "globalParameters": {
+                    "environment": {
+                        "value": "="
+                    }
+                }
+            }
+        }
+    },
     "Microsoft.DataFactory/factories/linkedServices": {
         "AzureBlobStorage": {
             "properties": {
