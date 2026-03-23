@@ -1,8 +1,8 @@
 {
-	"name": "Backup",
+	"name": "Output",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "storage_backup",
+			"referenceName": "LS_storage",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
@@ -10,7 +10,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"container": "bronzelayer"
+				"folderPath": "output",
+				"container": "test"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",

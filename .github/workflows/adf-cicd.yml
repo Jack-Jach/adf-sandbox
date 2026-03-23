@@ -1,0 +1,129 @@
+name: ADF CI/CD
+
+on:
+  push:
+    branches:
+      - dev
+      - test
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RESOURCE_GROUP: "Sandbox"
+  BUILD_ARTIFACT: "ADF_ARM_Templates"
+
+jobs:
+  # ──────────────────────────────────────
+  # CI - Validate & Build
+  # ──────────────────────────────────────
+  validate-and-build:
+    runs-on: ubuntu-latest
+
+    env:
+      ADF_ID: ${{ (github.ref_name == 'main' && 'prod-scc-adf') || (github.ref_name == 'test' && 'test-scc-adf') || 'dev-scc-adf' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install ADF utilities
+        run: npm install
+
+      - name: Validate
+        run: |
+          npm run build validate \
+          ${{ github.workspace }}/adf \
+          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.DataFactory/factories/${{ env.ADF_ID }}
+
+      - name: Generate ARM template
+        run: |
+          npm run build export \
+          ${{ github.workspace }}/adf \
+          /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RESOURCE_GROUP }}/providers/Microsoft.DataFactory/factories/${{ env.ADF_ID }} \
+          "ExportedArmTemplate"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BUILD_ARTIFACT }}
+          path: ExportedArmTemplate/
+
+  # ──────────────────────────────────────
+  # CD - Deploy dev/test
+  # ──────────────────────────────────────
+  deploy:
+    name: Deploy (${{ github.ref_name }})
+    if: ${{ github.ref_name == 'dev' || github.ref_name == 'test' }}
+    needs: validate-and-build
+    runs-on: ubuntu-latest
+
+    env:
+      ADF_ID: ${{ (github.ref_name == 'test' && 'test-scc-adf') || 'dev-scc-adf' }}
+
+    steps:
+      - name: Download ARM template
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.BUILD_ARTIFACT }}
+          path: arm-output/
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      - name: Deploy to ${{ github.ref_name }} ADF
+        uses: Azure/data-factory-deploy-action@v1.2.0
+        with:
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          dataFactoryName: ${{ env.ADF_ID }}
+          armTemplateFile: arm-output/ARMTemplateForFactory.json
+          armTemplateParametersFile: arm-output/ARMTemplateParametersForFactory.json
+          additionalParameters: "factoryName=${{ env.ADF_ID }}"
+
+  # ──────────────────────────────────────
+  # CD - Deploy prod (with approval)
+  # ──────────────────────────────────────
+  deploy-prod:
+    if: ${{ github.ref_name == 'main' }}
+    needs: validate-and-build
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      ADF_ID: "prod-scc-adf"
+
+    steps:
+      - name: Download ARM template
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.BUILD_ARTIFACT }}
+          path: arm-output/
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      - name: Deploy to prod ADF
+        uses: Azure/data-factory-deploy-action@v1.2.0
+        with:
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          dataFactoryName: ${{ env.ADF_ID }}
+          armTemplateFile: arm-output/ARMTemplateForFactory.json
+          armTemplateParametersFile: arm-output/ARMTemplateParametersForFactory.json
+          additionalParameters: "factoryName=${{ env.ADF_ID }}"
