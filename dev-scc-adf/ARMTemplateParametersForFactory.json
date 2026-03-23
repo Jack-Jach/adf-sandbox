@@ -5,7 +5,13 @@
 		"factoryName": {
 			"value": "dev-scc-adf"
 		},
+		"ConnectStorage_connectionString": {
+			"value": ""
+		},
 		"LS_storage_connectionString": {
+			"value": ""
+		},
+		"ConnectStorage_properties_typeProperties_connectionString": {
 			"value": ""
 		},
 		"LS_storage_properties_typeProperties_connectionString": {

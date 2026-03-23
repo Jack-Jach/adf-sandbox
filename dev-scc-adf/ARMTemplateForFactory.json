@@ -7,9 +7,16 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dev-scc-adf"
 		},
+		"ConnectStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ConnectStorage'"
+		},
 		"LS_storage_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_storage'"
+		},
+		"ConnectStorage_properties_typeProperties_connectionString": {
+			"type": "string"
 		},
 		"LS_storage_properties_typeProperties_connectionString": {
 			"type": "string"
@@ -28,7 +35,14 @@
 					{
 						"name": "SeparateEnvironment",
 						"type": "IfCondition",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Input-Output",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"userProperties": [],
 						"typeProperties": {
 							"expression": {
@@ -109,6 +123,66 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "Input-Output",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "TryConnectStorage",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "TryConnectStorage2",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
 					}
 				],
 				"policy": {
@@ -117,6 +191,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/TryConnectStorage')]",
+				"[concat(variables('factoryId'), '/datasets/TryConnectStorage2')]",
 				"[concat(variables('factoryId'), '/datasets/Input')]",
 				"[concat(variables('factoryId'), '/datasets/Output')]"
 			]
@@ -177,6 +253,88 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/LS_storage')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TryConnectStorage')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ConnectStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "aicg.csv",
+						"folderPath": "input",
+						"container": "test"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ConnectStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TryConnectStorage2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ConnectStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "output",
+						"container": "test"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "company_name",
+						"type": "String"
+					},
+					{
+						"name": "country_or_region",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ConnectStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ConnectStorage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": {
+						"type": "SecureString",
+						"value": "[parameters('ConnectStorage_properties_typeProperties_connectionString')]"
+					}
+				}
+			},
+			"dependsOn": []
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/LS_storage')]",

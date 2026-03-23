@@ -7,9 +7,16 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dev-scc-adf"
 		},
+		"ConnectStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ConnectStorage'"
+		},
 		"LS_storage_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_storage'"
+		},
+		"ConnectStorage_properties_typeProperties_connectionString": {
+			"type": "string"
 		},
 		"LS_storage_properties_typeProperties_connectionString": {
 			"type": "string"
@@ -41,8 +48,14 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"ConnectStorage_connectionString": {
+						"value": "[parameters('ConnectStorage_connectionString')]"
+					},
 					"LS_storage_connectionString": {
 						"value": "[parameters('LS_storage_connectionString')]"
+					},
+					"ConnectStorage_properties_typeProperties_connectionString": {
+						"value": "[parameters('ConnectStorage_properties_typeProperties_connectionString')]"
 					},
 					"LS_storage_properties_typeProperties_connectionString": {
 						"value": "[parameters('LS_storage_properties_typeProperties_connectionString')]"
